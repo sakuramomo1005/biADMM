@@ -2,7 +2,7 @@
 % Please edit documentation in R/biADMM.R
 \name{biADMM}
 \alias{biADMM}
-\title{Algorithms for Convex Biclustering}
+\title{bi-ADMM: a Biclustering Algorithm for the General Model}
 \usage{
 biADMM(
   X,
@@ -10,7 +10,7 @@ biADMM(
   nu2,
   gamma_1,
   gamma_2,
-  kk = 5,
+  m = 5,
   phi = 0.5,
   niter = 1000,
   tol = 0.1,
@@ -18,13 +18,31 @@ biADMM(
 )
 }
 \arguments{
-\item{output}{}
+\item{X}{The data matrix to be clustered. The rows are the samples, and the columns are the features.}
+
+\item{nu1}{A regularization parameter for row shrinkage}
+
+\item{nu2}{A regularization parameter for column shrinkage}
+
+\item{gamma_1}{A regularization parameter for row shrinkage}
+
+\item{gamma_2}{A regularization parameter for column shrinkage}
+
+\item{m}{m-nearest-neighbors in the weight function}
+
+\item{phi}{The parameter phi in the weight function}
+
+\item{tol}{Stopping criterion}
+
+\item{output}{When output = 1, print the results at each iteration. No print when output equals other value.}
+
+\item{niters}{Iteraion times}
 }
 \value{
-
+A list of results, containing matrix of A, v, z, lambda1, and lambda2
 }
 \description{
-Algorithms for Convex Biclustering
+bi-ADMM: a Biclustering Algorithm for the General Model
 }
 \examples{
 # generate dataset
@@ -32,9 +50,11 @@ set.seed(123)
 X = data_gen(n = 100, p = 80)
 # set parameters
 nu1 = nu2 = gamma_1 = gamma_2 = 0.1
-kk = 5
+m = 5
 phi = 0.5
 # biADMM algorithm
 res1 = biADMM(X, nu1, nu2, gamma_1, gamma_2,
- kk, phi, niter = 1000, tol = 0.0001, output = 0)
+ m, phi, niter = 10, tol = 0.0001, output = 0)
+dim(res1$A)
+
 }

@@ -8,8 +8,11 @@
 #'
 #' @return A list of e matrices.
 #' \cite{el1} is the matrix of el1 in the paper, which is constructed by column matrix ei. ei is an n-dimensional vector with each component being 0 but its i-th component being 1.
+#'
 #' \cite{el2} is the matrix of el2 in the paper, which is constructed by column matrix ei. ei is an n-dimensional vector with each component being 0 but its i-th component being 1.
+#'
 #' \cite{ek1} is the matrix of ek1 in the paper, which is constructed by column matrix ei. ei is an p-dimensional vector with each component being 0 but its i-th component being 1.
+#'
 #' \cite{ek2} is the matrix of ek2 in the paper, which is constructed by column matrix ei. ei is an p-dimensional vector with each component being 0 but its i-th component being 1.
 
 #' @export

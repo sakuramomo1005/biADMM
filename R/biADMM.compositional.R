@@ -1,17 +1,19 @@
-#' bi-ADMM: a Biclustering Algorithm for the General Model
+#' biC-ADMM: Biclustering Algorithm for Model with Compositional Constraints
 #'
 #' @param X The data matrix to be clustered. The rows are the samples, and the columns are the features.
 #' @param nu1 A regularization parameter for row shrinkage
 #' @param nu2 A regularization parameter for column shrinkage
+#' @param nu3 A regularization parameter for compositional data constrain
 #' @param gamma_1 A regularization parameter for row shrinkage
 #' @param gamma_2 A regularization parameter for column shrinkage
 #' @param m m-nearest-neighbors in the weight function
 #' @param phi The parameter phi in the weight function
-#' @param niters Iteraion times
 #' @param tol Stopping criterion
 #' @param output When output = 1, print the results at each iteration. No print when output equals other value.
+#' @param niter Iteraion times
+#' @param weight.scale If weight.scale = 1, the code will make the input data have compositional structure.
 #'
-#' @return A list of results, containing matrix of A, v, z, lambda1, and lambda2
+#' @return A list of results, containing matrix of A, v, z, lambda1, lambda2, and lambda3
 #' @export
 #'
 #' @examples
@@ -19,17 +21,16 @@
 #' set.seed(123)
 #' X = data_gen(n = 100, p = 80)
 #' # set parameters
-#' nu1 = nu2 = gamma_1 = gamma_2 = 0.1
+#' nu1 = nu2 = nu3 = gamma_1 = gamma_2 = 0.1
 #' m = 5
 #' phi = 0.5
 #' # biADMM algorithm
-#' res1 = biADMM(X, nu1, nu2, gamma_1, gamma_2,
-#'  m, phi, niter = 10, tol = 0.0001, output = 0)
-#' dim(res1$A)
-#'
-biADMM = function(X, nu1, nu2,
-                  gamma_1, gamma_2,
-                  m = 5, phi=0.5,niter = 1000,tol = 0.1,output = 1){
+#' res3 = biC.ADMM(X, nu1, nu2, nu3, gamma_1, gamma_2,
+#'  m, phi, niter = 10, tol = 0.0001, weight.scale = 1, output = 0)
+#' dim(res3$A)
+biC.ADMM = function(X, nu1, nu2, nu3, gamma_1, gamma_2,
+                                m = 5, phi = 0.5, niter = 1000, tol = 1e-5,
+                                weight.scale = 1, output = 1){
 
   require(reticulate)
   require(cvxbiclustr)
@@ -51,14 +52,27 @@ biADMM = function(X, nu1, nu2,
   k_row <- m
   k_col <- m
 
-  w_row <- kernel_weights(t(X), phi/p)
-  w_col <- kernel_weights(X, phi/n)
-  w_row <- knn_weights(w_row, k_row, n)
-  w_col <- knn_weights(w_col, k_col, p)
-  w_row <- w_row/sum(w_row)
-  w_col <- w_col/sum(w_col)
-  w_row <- w_row/sqrt(p)
-  w_col <- w_col/sqrt(n)
+  if(weight.scale==1){
+    w_row <- kernel_weights(scale(t(X)), phi/p)
+    s.X <- scale(X)
+    s.X[is.na(s.X)] = 0
+    w_col <- kernel_weights(s.X, phi/n) # scale cols to make them comparible
+    w_row <- knn_weights(w_row, k_row, n)
+    w_col <- knn_weights(w_col, k_col, p)
+    w_row <- w_row/sum(w_row)
+    w_col <- w_col/sum(w_col)
+    w_row <- w_row/sqrt(p)
+    w_col <- w_col/sqrt(n)
+  } else {
+    w_row <- kernel_weights(t(X), phi/p)
+    w_col <- kernel_weights(X, phi/n)
+    w_row <- knn_weights(w_row, k_row, n)
+    w_col <- knn_weights(w_col, k_col, p)
+    w_row <- w_row/sum(w_row)
+    w_col <- w_col/sum(w_col)
+    w_row <- w_row/sqrt(p)
+    w_col <- w_col/sqrt(n)
+  }
 
   w_l <- w_row; u_k <- w_col
 
@@ -67,10 +81,14 @@ biADMM = function(X, nu1, nu2,
   z <- matrix(0,n,p2)
   lambda_1 <- matrix(0,p,n2)
   lambda_2 <- matrix(0,n,p2)
+  lambda_3 <- matrix(0,n,1)
 
   for(iter in 1: niter){
 
-    A_old <- A; v_old <- v; z_old <- z; lambda_1_old <- lambda_1; lambda_2_old <- lambda_2
+    A_old <- A; v_old <- v; z_old <- z;
+    lambda_1_old <- lambda_1;
+    lambda_2_old <- lambda_2
+    lambda_3_old <- lambda_3
 
     # update A
 
@@ -79,14 +97,18 @@ biADMM = function(X, nu1, nu2,
 
     M <- diag(1,n,n) + nu1 * En
 
-    N <- nu2 * Ep
+    N <- nu2 * Ep + nu3 * matrix(1,p,1) %*% t(matrix(1,p,1))
 
-    lv <- lambda_1+ nu1 * v
+    s <- matrix(1,n,1) + lambda_3 / nu3
+
+    lv <- lambda_1 + nu1 * v
     lz <- lambda_2 + nu2 * z
 
     C2 <- (el1-el2) %*% t(lv)
     C3 <- lz %*% t(ek1-ek2)
-    C <- X +  C2 + C3
+    C4 <- matrix(rep(s,p),n,p) * nu3
+
+    C <- X +  C2 + C3 + C4
 
     A <- sylvester(M,t(N),C)
 
@@ -101,13 +123,14 @@ biADMM = function(X, nu1, nu2,
 
     temp1 <- ifelse((1 - sigma_1/sqrt(apply(vtemp^2,2,sum))) < 0, 0,1 - sigma_1/sqrt(apply(vtemp^2,2,sum)))
     temp2 <- matrix(temp1,dim(vtemp)[1],dim(vtemp)[2], byrow = TRUE) * vtemp
+
     v <- temp2
 
     ztemp <- ak1 - ak2 - 1/nu2 * lambda_2
     sigma_2 <- gamma_2 * u_k/nu2
 
-    temp3 <- ifelse((1 - sigma_2/sqrt(apply(ztemp^2,2,sum))) < 0, 0,1 - sigma_2/sqrt(apply(ztemp^2,2,sum)))
-    temp4 <- matrix(temp3,dim(ztemp)[1],dim(ztemp)[2], byrow = TRUE) * ztemp
+    temp3 = ifelse((1 - sigma_2/sqrt(apply(ztemp^2,2,sum))) < 0, 0,1 - sigma_2/sqrt(apply(ztemp^2,2,sum)))
+    temp4 = matrix(temp3,dim(ztemp)[1],dim(ztemp)[2], byrow = TRUE) * ztemp
 
     z <- temp4
 
@@ -117,41 +140,49 @@ biADMM = function(X, nu1, nu2,
     # update lambda 2
     lambda_2 <- lambda_2 + nu2 * (z - ak1 + ak2)
 
+    # update lambda 3
+    lambda_3 <- lambda_3 + nu3 * (matrix(1,n,1) - A %*% matrix(1,p,1) )
+
     if(output == 1){
       print('iter')
       print(iter)
-
       print(paste('A',mean(abs(A - A_old))))
       print(paste('v',mean(abs(v - v_old))))
       print(paste('z',mean(abs(z -z_old))))
-      print(paste('l',mean(abs(lambda_1 - lambda_1_old))))
+      print(paste('1',mean(abs(lambda_1 - lambda_1_old))))
       print(paste('2',mean(abs(lambda_2 - lambda_2_old))))
+      print(paste('3',mean(abs(lambda_3 - lambda_3_old))))
     }
-
 
     # whether coverage
     if(mean(abs(A - A_old)) < tol &
-       mean(abs(v - v_old)) < tol&
+       mean(abs(v - v_old)) < tol &
        mean(abs(z - z_old)) < tol &
        mean(abs(lambda_1 - lambda_1_old)) < tol &
-       mean(abs(lambda_2 - lambda_2_old)) <tol){
+       mean(abs(lambda_2 - lambda_2_old)) < tol &
+       mean(abs(lambda_3 - lambda_3_old)) < tol){
       return(list(A = A,
                   v = v,
                   z = z,
                   lambad_1 = lambda_1,
                   lambad_2 = lambda_2,
+                  lambda_3=lambda_3,
                   niter = iter))
       break
     }
   }
 
   if(iter == niter){
-
+    print(paste('not converge within',iter, 'times'))
     return(list(A = A,
                 v = v,
                 z = z,
                 lambad_1 = lambda_1,
                 lambad_2 = lambda_2,
+                lambda_3=lambda_3,
                 niter = iter))
   }
+
 }
+
+

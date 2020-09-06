@@ -1,16 +1,16 @@
 Package: biADMM
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Convex bicluster alogrithm based on ADMM algorithm
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Binhuan Wang, Jiyuan Hu, Lanqiu Yao
+Maintainer: Lanqiu Yao <ly1192@nyu.edu>
+Description: A convex biclustering algorithm biADMM under a general setup based on the alternating direction method of multipliers (ADMM) algorithm, as well as an algorithm named biC.ADMM specifically to tackle compositional constraints
+License: MIT
 Encoding: UTF-8
 LazyData: true
-Imports: reticulate,
-    Matrix,
-    cvxbiclustr,
-    cvxclustr
 RoxygenNote: 7.1.0
+Imports: stringr,
+    lubridate,
+    reticulate,
+    Matrix,
+    cvxbiclustr

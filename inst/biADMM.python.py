@@ -1,12 +1,8 @@
 
 # coding: utf-8
 
-# In[34]:
-
-
 import numpy as np
 from scipy import linalg
-
 
 def elk_python(n,p):
 
@@ -34,8 +30,7 @@ def elk_python(n,p):
 
     return(el1,el2,ek1,ek2)
 
-
-def biADMM_python(X, nu1, nu2, gamma_1, gamma_2, w_l, u_k, niters, tol, output = 1):
+def biADMM_python(X, nu1, nu2, gamma_1, gamma_2, w_l, u_k, prox, niters, tol, output = 1):
 
     n = X.shape[0]
     p = X.shape[1]
@@ -83,23 +78,63 @@ def biADMM_python(X, nu1, nu2, gamma_1, gamma_2, w_l, u_k, niters, tol, output =
 
         # update vz
 
-        sigma_1 = gamma_1 * w_l/nu1
-        sigma_1 = sigma_1.flatten()
-        vtemp = al1 - al2 - 1/nu1 * lambda_1
+        if prox == 'l1':
 
-        temp1 = np.where((1 - sigma_1/np.sqrt(np.sum(vtemp**2,axis=0)) < 0),0,1 - sigma_1/np.sqrt(np.sum(vtemp**2,axis=0)))
-        temp2 = np.repeat(temp1,p).reshape(n2,p).T * vtemp
+            sigma_1 = gamma_1 * w_l/nu1
+            sigma_1 = sigma_1.flatten()
+            vtemp = al1 - al2 - 1/nu1 * lambda_1
+            temp1 = 1 - sigma_1/np.sum(np.abs(vtemp),axis=0)
+            temp1 = np.where(temp1 < 0,0,temp1)
+            temp2 = np.repeat(temp1,p).reshape(n2,p).T * vtemp
+            v = temp2
 
-        v = temp2
+            sigma_2 = gamma_2 * u_k/nu2
+            sigma_2 = sigma_2.flatten()
+            ztemp = ak1 - ak2 - 1/nu2 * lambda_2
+            temp3 = 1 - sigma_1/np.sum(np.abs(ztemp),axis=0)
+            temp3 = np.where(temp3 < 0, 0 ,temp3)
+            temp4 = np.repeat(temp3,n).reshape(p2,n).T * ztemp
+            z = temp4
 
-        sigma_2 = gamma_2 * u_k/nu2
-        sigma_2 = sigma_2.flatten()
-        ztemp = ak1 - ak2 - 1/nu2 * lambda_2
+        elif prox == 'l2':
 
-        temp3 = np.where((1 - sigma_2/np.sqrt(np.sum(ztemp**2,axis=0)) < 0), 0 ,1 - sigma_2/np.sqrt(np.sum(ztemp**2,axis=0)))
-        temp4 = np.repeat(temp3,n).reshape(p2,n).T * ztemp
+            sigma_1 = gamma_1 * w_l/nu1
+            sigma_1 = sigma_1.flatten()
+            vtemp = al1 - al2 - 1/nu1 * lambda_1
+            temp1 = 1 - sigma_1/np.sqrt(np.sum(vtemp**2,axis=0))
+            temp1 = np.where(temp1 < 0,0,temp1)
+            temp2 = np.repeat(temp1,p).reshape(n2,p).T * vtemp
+            v = temp2
 
-        z = temp4
+            sigma_2 = gamma_2 * u_k/nu2
+            sigma_2 = sigma_2.flatten()
+            ztemp = ak1 - ak2 - 1/nu2 * lambda_2
+            temp3 = 1 - sigma_2/np.sqrt(np.sum(ztemp**2,axis=0))
+            temp3 = np.where(temp3 < 0, 0 ,temp3)
+            temp4 = np.repeat(temp3,n).reshape(p2,n).T * ztemp
+            z = temp4
+
+        elif prox == 'l-inf':
+
+            sigma_1 = gamma_1 * w_l/nu1
+            sigma_1 = sigma_1.flatten()
+            vtemp = al1 - al2 - 1/nu1 * lambda_1
+            temp1 = 1 - sigma_1/np.sum(np.abs(vtemp),axis=0)
+            temp1 = np.where(temp1 < 0,0,temp1)
+            temp2 = np.repeat(temp1,p).reshape(n2,p).T * vtemp
+            v = vtemp - temp2
+
+            sigma_2 = gamma_2 * u_k/nu2
+            sigma_2 = sigma_2.flatten()
+            ztemp = ak1 - ak2 - 1/nu2 * lambda_2
+            temp3 = 1 - sigma_1/np.sum(np.abs(ztemp),axis=0)
+            temp3 = np.where(temp3 < 0, 0 ,temp3)
+            temp4 = np.repeat(temp3,n).reshape(p2,n).T * ztemp
+            z = ztemp - temp4
+
+        else:
+            print('Error: please specify the norms of the proximal mapping')
+
 
         # update lambda
 
@@ -131,8 +166,7 @@ def biADMM_python(X, nu1, nu2, gamma_1, gamma_2, w_l, u_k, niters, tol, output =
 
     return(A, v, z, lambda_1, lambda_2, iters)
 
-
-def biADMM_python_compositional(X, nu1, nu2, nu3, gamma_1, gamma_2, w_l, u_k, niters, tol, output = 1):
+def biADMM_python_compositional(X, nu1, nu2, nu3, gamma_1, gamma_2, w_l, u_k, prox, niters, tol, output = 1):
 
     n = X.shape[0]
     p = X.shape[1]
@@ -185,23 +219,63 @@ def biADMM_python_compositional(X, nu1, nu2, nu3, gamma_1, gamma_2, w_l, u_k, ni
 
         # update vz
 
-        sigma_1 = gamma_1 * w_l/nu1
-        sigma_1 = sigma_1.flatten()
-        vtemp = al1 - al2 - 1/nu1 * lambda_1
+        if prox == 'l1':
 
-        temp1 = np.where((1 - sigma_1/np.sqrt(np.sum(vtemp**2,axis=0)) < 0),0,1 - sigma_1/np.sqrt(np.sum(vtemp**2,axis=0)))
-        temp2 = np.repeat(temp1,p).reshape(n2,p).T * vtemp
+            sigma_1 = gamma_1 * w_l/nu1
+            sigma_1 = sigma_1.flatten()
+            vtemp = al1 - al2 - 1/nu1 * lambda_1
+            temp1 = 1 - sigma_1/np.sum(np.abs(vtemp),axis=0)
+            temp1 = np.where(temp1 < 0,0,temp1)
+            temp2 = np.repeat(temp1,p).reshape(n2,p).T * vtemp
+            v = temp2
 
-        v = temp2
+            sigma_2 = gamma_2 * u_k/nu2
+            sigma_2 = sigma_2.flatten()
+            ztemp = ak1 - ak2 - 1/nu2 * lambda_2
+            temp3 = 1 - sigma_1/np.sum(np.abs(ztemp),axis=0)
+            temp3 = np.where(temp3 < 0, 0 ,temp3)
+            temp4 = np.repeat(temp3,n).reshape(p2,n).T * ztemp
+            z = temp4
 
-        sigma_2 = gamma_2 * u_k/nu2
-        sigma_2 = sigma_2.flatten()
-        ztemp = ak1 - ak2 - 1/nu2 * lambda_2
+        elif prox == 'l2':
 
-        temp3 = np.where((1 - sigma_2/np.sqrt(np.sum(ztemp**2,axis=0)) < 0), 0 ,1 - sigma_2/np.sqrt(np.sum(ztemp**2,axis=0)))
-        temp4 = np.repeat(temp3,n).reshape(p2,n).T * ztemp
+            sigma_1 = gamma_1 * w_l/nu1
+            sigma_1 = sigma_1.flatten()
+            vtemp = al1 - al2 - 1/nu1 * lambda_1
+            temp1 = 1 - sigma_1/np.sqrt(np.sum(vtemp**2,axis=0))
+            temp1 = np.where(temp1 < 0,0,temp1)
+            temp2 = np.repeat(temp1,p).reshape(n2,p).T * vtemp
+            v = temp2
 
-        z = temp4
+            sigma_2 = gamma_2 * u_k/nu2
+            sigma_2 = sigma_2.flatten()
+            ztemp = ak1 - ak2 - 1/nu2 * lambda_2
+            temp3 = 1 - sigma_2/np.sqrt(np.sum(ztemp**2,axis=0))
+            temp3 = np.where(temp3 < 0, 0 ,temp3)
+            temp4 = np.repeat(temp3,n).reshape(p2,n).T * ztemp
+            z = temp4
+
+        elif prox == 'l-inf':
+
+            sigma_1 = gamma_1 * w_l/nu1
+            sigma_1 = sigma_1.flatten()
+            vtemp = al1 - al2 - 1/nu1 * lambda_1
+            temp1 = 1 - sigma_1/np.sum(np.abs(vtemp),axis=0)
+            temp1 = np.where(temp1 < 0,0,temp1)
+            temp2 = np.repeat(temp1,p).reshape(n2,p).T * vtemp
+            v = vtemp - temp2
+
+            sigma_2 = gamma_2 * u_k/nu2
+            sigma_2 = sigma_2.flatten()
+            ztemp = ak1 - ak2 - 1/nu2 * lambda_2
+            temp3 = 1 - sigma_1/np.sum(np.abs(ztemp),axis=0)
+            temp3 = np.where(temp3 < 0, 0 ,temp3)
+            temp4 = np.repeat(temp3,n).reshape(p2,n).T * ztemp
+            z = ztemp - temp4
+
+        else:
+            print('Error: please specify the norms of the proximal mapping')
+
 
         # update lambda
 

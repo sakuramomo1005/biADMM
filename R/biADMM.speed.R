@@ -8,6 +8,7 @@
 #' @param gamma_2 A regularization parameter for column shrinkage
 #' @param m m-nearest-neighbors in the weight function
 #' @param phi The parameter phi in the weight function
+#' @param prox The proximal maps. Could calculate L1 norm, L2 norm, or L-infinity, use "l1", "l2", or "l-inf", respectively.
 #' @param niters Iteraion times
 #' @param tol Stopping criterion
 #' @param output When output = 1, print the results at each iteration. No print when output equals other value.
@@ -29,7 +30,13 @@
 #'  m, phi, niter = 10, tol = 0.0001, output = 0)
 #' dim(res2$A)
 
-biADMM.speed = function(X,nu1,nu2, gamma_1, gamma_2, m, phi, niters = 10, tol = 0.1, output = 1){
+biADMM.speed = function(X,nu1,nu2, gamma_1, gamma_2, m, phi,  prox = 'l2', niters = 10, tol = 0.1, output = 1){
+
+  require(reticulate)
+  require(cvxbiclustr)
+  require(cvxclustr)
+  require(Matrix)
+  require(MASS)
 
   path <- paste(system.file(package="biADMM"), "biADMM.python.py", sep="/")
   source_python(path)
@@ -53,7 +60,9 @@ biADMM.speed = function(X,nu1,nu2, gamma_1, gamma_2, m, phi, niters = 10, tol = 
   u_k <- matrix(u_k, length(u_k),1)
 
   res <- biADMM_python(X, nu1, nu2, gamma_1, gamma_2,
-                       w_l, u_k, niters, tol, output = output)
+                       w_l, u_k,
+                       prox,
+                       niters, tol, output = output)
 
   result <- list(A = res[[1]], v = res[[2]], z = res[[3]], lambda_1 = res[[4]], lambda_2 = res[[5]], iters = res[[6]])
   return(result)

@@ -12,6 +12,7 @@ biADMM(
   gamma_2,
   m = 5,
   phi = 0.5,
+  prox = "l2",
   niter = 1000,
   tol = 0.1,
   output = 1
@@ -31,6 +32,8 @@ biADMM(
 \item{m}{m-nearest-neighbors in the weight function}
 
 \item{phi}{The parameter phi in the weight function}
+
+\item{prox}{The proximal maps. Could calculate L1 norm, L2 norm, or L-infinity, use "l1", "l2", or "l-inf", respectively.}
 
 \item{tol}{Stopping criterion}
 
@@ -56,5 +59,6 @@ phi = 0.5
 res1 = biADMM(X, nu1, nu2, gamma_1, gamma_2,
  m, phi, niter = 10, tol = 0.0001, output = 0)
 dim(res1$A)
+
 
 }

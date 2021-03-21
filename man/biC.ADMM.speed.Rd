@@ -13,6 +13,7 @@ biC.ADMM.speed(
   gamma_2,
   m,
   phi,
+  prox = "l2",
   niters = 10,
   tol = 0.1,
   weight.scale = 1,
@@ -35,6 +36,8 @@ biC.ADMM.speed(
 \item{m}{m-nearest-neighbors in the weight function}
 
 \item{phi}{The parameter phi in the weight function}
+
+\item{prox}{The proximal maps. Could calculate L1 norm, L2 norm, or L-infinity, use "l1", "l2", or "l-inf", respectively.}
 
 \item{niters}{Iteraion times}
 

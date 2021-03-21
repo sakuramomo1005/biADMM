@@ -8,6 +8,7 @@
 #' @param gamma_2 A regularization parameter for column shrinkage
 #' @param m m-nearest-neighbors in the weight function
 #' @param phi The parameter phi in the weight function
+#' @param prox The proximal maps. Could calculate L1 norm, L2 norm, or L-infinity, use "l1", "l2", or "l-inf", respectively.
 #' @param tol Stopping criterion
 #' @param output When output = 1, print the results at each iteration. No print when output equals other value.
 #' @param niter Iteraion times
@@ -29,8 +30,10 @@
 #'  m, phi, niter = 10, tol = 0.0001, weight.scale = 1, output = 0)
 #' dim(res3$A)
 biC.ADMM = function(X, nu1, nu2, nu3, gamma_1, gamma_2,
-                                m = 5, phi = 0.5, niter = 1000, tol = 1e-5,
-                                weight.scale = 1, output = 1){
+                    m = 5, phi = 0.5,
+                    prox = 'l2',
+                    niter = 1000, tol = 1e-5,
+                    weight.scale = 1, output = 1){
 
   require(reticulate)
   require(cvxbiclustr)
@@ -118,21 +121,64 @@ biC.ADMM = function(X, nu1, nu2, nu3, gamma_1, gamma_2,
     ak2 <- A %*% ek2
 
     # update vz
-    sigma_1 <- gamma_1 * w_l/nu1
-    vtemp <- al1 - al2 - 1/nu1 * lambda_1
 
-    temp1 <- ifelse((1 - sigma_1/sqrt(apply(vtemp^2,2,sum))) < 0, 0,1 - sigma_1/sqrt(apply(vtemp^2,2,sum)))
-    temp2 <- matrix(temp1,dim(vtemp)[1],dim(vtemp)[2], byrow = TRUE) * vtemp
+    if(prox == 'l1'){
 
-    v <- temp2
+      # update v
+      sigma_1 <- gamma_1 * w_l/nu1
+      vtemp <- al1 - al2 - 1/nu1 * lambda_1
+      temp1 <- 1 - sigma_1/apply(abs(vtemp),2,sum)
+      temp1 <- ifelse(temp1 < 0, 0, temp1)
+      temp2 <- matrix(temp1,dim(vtemp)[1],dim(vtemp)[2], byrow = TRUE) * vtemp
+      v <- temp2
 
-    ztemp <- ak1 - ak2 - 1/nu2 * lambda_2
-    sigma_2 <- gamma_2 * u_k/nu2
+      # update z
+      ztemp <- ak1 - ak2 - 1/nu2 * lambda_2
+      sigma_2 <- gamma_2 * u_k/nu2
+      temp3 <- 1 - sigma_2/apply(abs(ztemp),2,sum)
+      temp3 <- ifelse(temp3 < 0, 0, temp3)
+      temp4 <- matrix(temp3,dim(ztemp)[1],dim(ztemp)[2], byrow = TRUE) * ztemp
+      z <- temp4
 
-    temp3 = ifelse((1 - sigma_2/sqrt(apply(ztemp^2,2,sum))) < 0, 0,1 - sigma_2/sqrt(apply(ztemp^2,2,sum)))
-    temp4 = matrix(temp3,dim(ztemp)[1],dim(ztemp)[2], byrow = TRUE) * ztemp
+    }else if(prox == 'l2'){
 
-    z <- temp4
+      # update v
+      sigma_1 <- gamma_1 * w_l/nu1
+      vtemp <- al1 - al2 - 1/nu1 * lambda_1
+      temp1 <- 1 - sigma_1/sqrt(apply(vtemp^2,2,sum))
+      temp1 <- ifelse(temp1 < 0, 0, temp1)
+      temp2 <- matrix(temp1,dim(vtemp)[1],dim(vtemp)[2], byrow = TRUE) * vtemp
+      v <- temp2
+
+      # update z
+      ztemp <- ak1 - ak2 - 1/nu2 * lambda_2
+      sigma_2 <- gamma_2 * u_k/nu2
+      temp3 <- 1 - sigma_2/sqrt(apply(ztemp^2,2,sum))
+      temp3 <- ifelse(temp3 < 0, 0, temp3)
+      temp4 <- matrix(temp3,dim(ztemp)[1],dim(ztemp)[2], byrow = TRUE) * ztemp
+      z <- temp4
+
+    }else if(prox == 'l-inf'){
+
+      # update v
+      sigma_1 <- gamma_1 * w_l/nu1
+      vtemp <- al1 - al2 - 1/nu1 * lambda_1
+      temp1 <- 1 - sigma_1/apply(abs(vtemp),2,sum)
+      temp1 <- ifelse(temp1 < 0, 0, temp1)
+      temp2 <- matrix(temp1,dim(vtemp)[1],dim(vtemp)[2], byrow = TRUE) * vtemp
+      v <- vtemp - temp2
+
+      # update z
+      ztemp <- ak1 - ak2 - 1/nu2 * lambda_2
+      sigma_2 <- gamma_2 * u_k/nu2
+      temp3 <- 1 - sigma_2/apply(abs(ztemp),2,sum)
+      temp3 <- ifelse(temp3 < 0, 0, temp3)
+      temp4 <- matrix(temp3,dim(ztemp)[1],dim(ztemp)[2], byrow = TRUE) * ztemp
+      z <- ztemp - temp4
+
+    }else{
+      print('Error: please specify the norms of the proximal mapping')
+    }
 
     # update lambda
     lambda_1 <- lambda_1 + nu1 * (v - al1 + al2)

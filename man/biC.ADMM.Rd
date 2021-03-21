@@ -13,6 +13,7 @@ biC.ADMM(
   gamma_2,
   m = 5,
   phi = 0.5,
+  prox = "l2",
   niter = 1000,
   tol = 1e-05,
   weight.scale = 1,
@@ -35,6 +36,8 @@ biC.ADMM(
 \item{m}{m-nearest-neighbors in the weight function}
 
 \item{phi}{The parameter phi in the weight function}
+
+\item{prox}{The proximal maps. Could calculate L1 norm, L2 norm, or L-infinity, use "l1", "l2", or "l-inf", respectively.}
 
 \item{niter}{Iteraion times}
 

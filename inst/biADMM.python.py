@@ -91,7 +91,7 @@ def biADMM_python(X, nu1, nu2, gamma_1, gamma_2, w_l, u_k, prox, niters, tol, ou
             sigma_2 = gamma_2 * u_k/nu2
             sigma_2 = sigma_2.flatten()
             ztemp = ak1 - ak2 - 1/nu2 * lambda_2
-            temp3 = 1 - sigma_1/np.sum(np.abs(ztemp),axis=0)
+            temp3 = 1 - sigma_2/np.sum(np.abs(ztemp),axis=0)
             temp3 = np.where(temp3 < 0, 0 ,temp3)
             temp4 = np.repeat(temp3,n).reshape(p2,n).T * ztemp
             z = temp4
@@ -127,7 +127,7 @@ def biADMM_python(X, nu1, nu2, gamma_1, gamma_2, w_l, u_k, prox, niters, tol, ou
             sigma_2 = gamma_2 * u_k/nu2
             sigma_2 = sigma_2.flatten()
             ztemp = ak1 - ak2 - 1/nu2 * lambda_2
-            temp3 = 1 - sigma_1/np.sum(np.abs(ztemp),axis=0)
+            temp3 = 1 - sigma_2/np.sum(np.abs(ztemp),axis=0)
             temp3 = np.where(temp3 < 0, 0 ,temp3)
             temp4 = np.repeat(temp3,n).reshape(p2,n).T * ztemp
             z = ztemp - temp4

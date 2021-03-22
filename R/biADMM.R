@@ -32,7 +32,7 @@
 biADMM = function(X, nu1, nu2,
                   gamma_1, gamma_2, m = 5, phi=0.5,
                   prox = 'l2',
-                  niter = 1000,tol = 0.1,output = 1){
+                  niters = 1000,tol = 0.1,output = 1){
 
   require(reticulate)
   require(cvxbiclustr)
@@ -71,7 +71,7 @@ biADMM = function(X, nu1, nu2,
   lambda_1 <- matrix(0,p,n2)
   lambda_2 <- matrix(0,n,p2)
 
-  for(iter in 1: niter){
+  for(iter in 1:niters){
 
     A_old <- A; v_old <- v; z_old <- z; lambda_1_old <- lambda_1; lambda_2_old <- lambda_2
 
@@ -156,6 +156,7 @@ biADMM = function(X, nu1, nu2,
 
     }else{
       print('Error: please specify the norms of the proximal mapping')
+      break
     }
 
     # update lambda
@@ -185,20 +186,20 @@ biADMM = function(X, nu1, nu2,
       return(list(A = A,
                   v = v,
                   z = z,
-                  lambad_1 = lambda_1,
-                  lambad_2 = lambda_2,
-                  niter = iter))
+                  lambda_1 = lambda_1,
+                  lambda_2 = lambda_2,
+                  niters = iter))
       break
     }
   }
 
-  if(iter == niter){
+  if(iter == niters){
 
     return(list(A = A,
                 v = v,
                 z = z,
-                lambad_1 = lambda_1,
-                lambad_2 = lambda_2,
-                niter = iter))
+                lambda_1 = lambda_1,
+                lambda_2 = lambda_2,
+                niters = iter))
   }
 }

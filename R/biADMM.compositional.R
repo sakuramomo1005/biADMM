@@ -11,7 +11,7 @@
 #' @param prox The proximal maps. Could calculate L1 norm, L2 norm, or L-infinity, use "l1", "l2", or "l-inf", respectively.
 #' @param tol Stopping criterion
 #' @param output When output = 1, print the results at each iteration. No print when output equals other value.
-#' @param niter Iteraion times
+#' @param niters Iteraion times
 #' @param weight.scale If weight.scale = 1, the code will make the input data have compositional structure.
 #'
 #' @return A list of results, containing matrix of A, v, z, lambda1, lambda2, and lambda3
@@ -27,12 +27,12 @@
 #' phi = 0.5
 #' # biADMM algorithm
 #' res3 = biC.ADMM(X, nu1, nu2, nu3, gamma_1, gamma_2,
-#'  m, phi, niter = 10, tol = 0.0001, weight.scale = 1, output = 0)
+#'  m, phi, niters = 10, tol = 0.0001, weight.scale = 1, output = 0)
 #' dim(res3$A)
 biC.ADMM = function(X, nu1, nu2, nu3, gamma_1, gamma_2,
                     m = 5, phi = 0.5,
                     prox = 'l2',
-                    niter = 1000, tol = 1e-5,
+                    niters = 1000, tol = 1e-5,
                     weight.scale = 1, output = 1){
 
   require(reticulate)
@@ -86,7 +86,7 @@ biC.ADMM = function(X, nu1, nu2, nu3, gamma_1, gamma_2,
   lambda_2 <- matrix(0,n,p2)
   lambda_3 <- matrix(0,n,1)
 
-  for(iter in 1: niter){
+  for(iter in 1:niters){
 
     A_old <- A; v_old <- v; z_old <- z;
     lambda_1_old <- lambda_1;
@@ -178,6 +178,7 @@ biC.ADMM = function(X, nu1, nu2, nu3, gamma_1, gamma_2,
 
     }else{
       print('Error: please specify the norms of the proximal mapping')
+      break
     }
 
     # update lambda
@@ -210,23 +211,23 @@ biC.ADMM = function(X, nu1, nu2, nu3, gamma_1, gamma_2,
       return(list(A = A,
                   v = v,
                   z = z,
-                  lambad_1 = lambda_1,
-                  lambad_2 = lambda_2,
-                  lambda_3=lambda_3,
-                  niter = iter))
+                  lambda_1 = lambda_1,
+                  lambda_2 = lambda_2,
+                  lambda_3 = lambda_3,
+                  niters = iter))
       break
     }
   }
 
-  if(iter == niter){
+  if(iter == niters){
     print(paste('not converge within',iter, 'times'))
     return(list(A = A,
                 v = v,
                 z = z,
-                lambad_1 = lambda_1,
-                lambad_2 = lambda_2,
-                lambda_3=lambda_3,
-                niter = iter))
+                lambda_1 = lambda_1,
+                lambda_2 = lambda_2,
+                lambda_3 = lambda_3,
+                niters = iter))
   }
 
 }

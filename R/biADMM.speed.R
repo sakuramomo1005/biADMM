@@ -38,7 +38,7 @@ biADMM.speed = function(X,nu1,nu2, gamma_1, gamma_2, m, phi,  prox = 'l2', niter
   require(Matrix)
   require(MASS)
 
-  path <- paste(system.file(package="biADMM"), "biADMM.python.py", sep="/")
+  path <- paste(system.file(package="biclusterADMM"), "biADMM.python.py", sep="/")
   source_python(path)
 
   n <- dim(X)[1]

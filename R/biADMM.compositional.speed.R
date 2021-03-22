@@ -32,12 +32,12 @@
 #'  m, phi, niter = 10, tol = 0.0001, weight.scale = 1, output = 0)
 #' dim(res4$A)
 biC.ADMM.speed = function(X, nu1, nu2, nu3,
-                        gamma_1, gamma_2,
-                        m, phi,
-                        prox = 'l2',
-                        niters = 10, tol = 0.1,
-                        weight.scale = 1,
-                        output = 1){
+                          gamma_1, gamma_2,
+                          m, phi,
+                          prox = 'l2',
+                          niters = 10, tol = 0.1,
+                          weight.scale = 1,
+                          output = 1){
 
   require(reticulate)
   require(cvxbiclustr)
@@ -45,7 +45,7 @@ biC.ADMM.speed = function(X, nu1, nu2, nu3,
   require(Matrix)
   require(MASS)
 
-  path <- paste(system.file(package="biADMM"), "biADMM.python.py", sep="/")
+  path <- paste(system.file(package="biclusterADMM"), "biADMM.python.py", sep="/")
   source_python(path)
 
   n <- dim(X)[1]; p <- dim(X)[2]
@@ -84,6 +84,8 @@ biC.ADMM.speed = function(X, nu1, nu2, nu3,
                                      prox,
                                      niters, tol, output = output)
 
-  result <- list(A = res[[1]], v = res[[2]], z = res[[3]], lambda_1 = res[[4]], lambda_2 = res[[5]], iters = res[[6]])
+  result <- list(A = res[[1]], v = res[[2]], z = res[[3]],
+                 lambda_1 = res[[4]], lambda_2 = res[[5]], lambda_3 = res[[6]],
+                 iters = res[[7]])
   return(result)
 }

@@ -45,7 +45,7 @@ biC.ADMM.speed = function(X, nu1, nu2, nu3,
   require(Matrix)
   require(MASS)
 
-  path <- paste(system.file(package="biclusterADMM"), "biADMM.python.py", sep="/")
+  path <- paste(system.file(package="biADMM"), "biADMM.python.py", sep="/")
   source_python(path)
 
   n <- dim(X)[1]; p <- dim(X)[2]

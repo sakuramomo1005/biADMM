@@ -1,5 +1,4 @@
 
-# coding: utf-8
 
 import numpy as np
 from scipy import linalg
@@ -134,7 +133,7 @@ def biADMM_python(X, nu1, nu2, gamma_1, gamma_2, w_l, u_k, prox, niters, tol, ou
 
         else:
             print('Error: please specify the norms of the proximal mapping')
-
+            break
 
         # update lambda
 
@@ -207,7 +206,7 @@ def biADMM_python_compositional(X, nu1, nu2, nu3, gamma_1, gamma_2, w_l, u_k, pr
         lz = lambda_2 + nu2 * z
         C2 = 0 -np.dot((el2-el1),lv.T)
         C3 = np.dot(lz,(ek1-ek2).T)
-        C4 = np.repeat(s,p).reshape(n,p)
+        C4 = np.repeat(s,p).reshape(n,p) * nu3
         C = X +  C2 + C3 + C4
 
         A = linalg.solve_sylvester(M, N.T, C)
@@ -275,6 +274,7 @@ def biADMM_python_compositional(X, nu1, nu2, nu3, gamma_1, gamma_2, w_l, u_k, pr
 
         else:
             print('Error: please specify the norms of the proximal mapping')
+            break
 
 
         # update lambda
